@@ -17,7 +17,7 @@ int main() {
 
   unsigned char sbox[256] = {
       // 0     1    2      3     4    5     6     7      8    9     A      B C
-      // D     E     F
+      // D     E     F                       S-Box for AES
       0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b,
       0xfe, 0xd7, 0xab, 0x76, 0xca, 0x82, 0xc9, 0x7d, 0xfa, 0x59, 0x47, 0xf0,
       0xad, 0xd4, 0xa2, 0xaf, 0x9c, 0xa4, 0x72, 0xc0, 0xb7, 0xfd, 0x93, 0x26,
@@ -41,7 +41,7 @@ int main() {
       0x8c, 0xa1, 0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0x0f,
       0xb0, 0x54, 0xbb, 0x16};
 
-  unsigned char gMulBy2[256] = {
+  unsigned char gMulBy2[256] = {//MixColumn result for Multiplication in GF(2^8) by 02
       0x00, 0x02, 0x04, 0x06, 0x08, 0x0a, 0x0c, 0x0e, 0x10, 0x12, 0x14, 0x16,
       0x18, 0x1a, 0x1c, 0x1e, 0x20, 0x22, 0x24, 0x26, 0x28, 0x2a, 0x2c, 0x2e,
       0x30, 0x32, 0x34, 0x36, 0x38, 0x3a, 0x3c, 0x3e, 0x40, 0x42, 0x44, 0x46,
@@ -66,7 +66,7 @@ int main() {
       0xe3, 0xe1, 0xe7, 0xe5,
   };
 
-  unsigned char gMulBy3[256] = {
+  unsigned char gMulBy3[256] = { //MixColumn result for Multiplication in GF(2^8) by 03
       0x00, 0x03, 0x06, 0x05, 0x0c, 0x0f, 0x0a, 0x09, 0x18, 0x1b, 0x1e, 0x1d,
       0x14, 0x17, 0x12, 0x11, 0x30, 0x33, 0x36, 0x35, 0x3c, 0x3f, 0x3a, 0x39,
       0x28, 0x2b, 0x2e, 0x2d, 0x24, 0x27, 0x22, 0x21, 0x60, 0x63, 0x66, 0x65,
@@ -91,7 +91,7 @@ int main() {
       0x1f, 0x1c, 0x19, 0x1a,
   };
 
-  unsigned char roundconstant[40] = {
+  unsigned char roundconstant[40] = {  //Round Constants used in Key Schedule
       0x01, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x04, 0x00,
       0x00, 0x00, 0x08, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00,
       0x20, 0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00, 0x80, 0x00,
@@ -104,7 +104,7 @@ int main() {
   cin >> cipher_key;
 
   int tmp[4][4];
-  int m = 0, n = 1;
+  int m = 0, n = 1;                                // Input is two strings: Plaintext and 128-bit Key
   for (int j = 0; j < 4; j++) {
     for (int i = 0; i < 4; i++) {
       string s;
@@ -130,22 +130,23 @@ int main() {
       y += 2;
     }
   }
+  
   for (int i = 0; i < 4; i++) {
-    for (int j = 0; j < 4; j++) {
+    for (int j = 0; j < 4; j++) {         //Initial Key Adding
       tmp[i][j] ^= key[i][j];
     }
   }
 
-  for (int round_no = 1; round_no <= 9; round_no++) {
+  for (int round_no = 1; round_no <= 9; round_no++) {    //loop for 9 rounds ,except last round
     for (int i = 0; i < 4; i++) {
       for (int j = 0; j < 4; j++) {
-        tmp[i][j] = sbox[tmp[i][j]];
+        tmp[i][j] = sbox[tmp[i][j]];     // SubByte Operation
       }
     }
     int tmp1[4][4];
     for (int i = 0; i < 4; i++) {
       for (int j = 0; j < 4; j++) {
-        tmp1[i][j] = tmp[i][(j + i + 4) % 4];
+        tmp1[i][j] = tmp[i][(j + i + 4) % 4];         // ShiftRow Operation
       }
     }
 
@@ -158,7 +159,7 @@ int main() {
         if (i == 0)
           tmp1[i][j] = gMulBy2[v[0]] ^ gMulBy3[v[1]] ^ v[2] ^ v[3];
         else if (i == 1)
-          tmp1[i][j] = v[0] ^ gMulBy2[v[1]] ^ gMulBy3[v[2]] ^ v[3];
+          tmp1[i][j] = v[0] ^ gMulBy2[v[1]] ^ gMulBy3[v[2]] ^ v[3];           // MixColumn Operation
         else if (i == 2)
           tmp1[i][j] = v[0] ^ v[1] ^ gMulBy2[v[2]] ^ gMulBy3[v[3]];
         else if (i == 3)
@@ -180,7 +181,7 @@ int main() {
     }
     // int round_no = 1;
     for (int i = 0; i < 4; i++) {
-      arr[i] ^= roundconstant[4 * (round_no - 1) + i];
+      arr[i] ^= roundconstant[4 * (round_no - 1) + i];                //KeySchedule
     }
     for (int j = 0; j < 4; j++) {
       for (int i = 0; i < 4; i++) {
@@ -195,16 +196,16 @@ int main() {
       }
     }
   }
-
+                                //loop ends, Last Round begins where MixColumn is not performed
   for (int i = 0; i < 4; i++) {
     for (int j = 0; j < 4; j++) {
-      tmp[i][j] = sbox[tmp[i][j]];
+      tmp[i][j] = sbox[tmp[i][j]];       //SubByte      
     }
   }
   int tmpx[4][4];
   for (int i = 0; i < 4; i++) {
     for (int j = 0; j < 4; j++) {
-      tmpx[i][j] = tmp[i][(j + i + 4) % 4];
+      tmpx[i][j] = tmp[i][(j + i + 4) % 4];     //ShiftRow
     }
   }
 
@@ -222,7 +223,7 @@ int main() {
   }
   // int round_no = 1;
   for (int i = 0; i < 4; i++) {
-    arr1[i] ^= roundconstant[36 + i];
+    arr1[i] ^= roundconstant[36 + i];                   // KeySchedule
   }
   for (int j = 0; j < 4; j++) {
     for (int i = 0; i < 4; i++) {
@@ -239,7 +240,7 @@ int main() {
 
   for (int i = 0; i < 4; i++) {
     for (int j = 0; j < 4; j++) {
-      cout << hex << tmp[j][i];
+      cout << hex << tmp[j][i];                        //CipherText is obtained and printed
     }
   }
 }
